@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="Free homework tracker web app to manage your assignments and deadlines easily.">
+    <meta name="keywords" content="homework tracker, assignment manager, student tool, free tracker">
+
+    <title>Homework Tracker - Interactive</title>
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --secondary-gradient: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            --accent-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-primary: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --shadow-hover: 0 15px 45px rgba(31, 38, 135, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 35%, #667eea 70%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+            animation: backgroundShift 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg);
+            border-radius: 30px;
+            padding: 40px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-primary);
+            position: relative;
+            animation: slideInUp 1s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            background: linear-gradient(45deg, #fff, #f0f0f0, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            from {
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+            to {
+                text-shadow: 0 0 40px rgba(255, 255, 255, 0.8), 0 0 60px rgba(102, 126, 234, 0.3);
+            }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            backdrop-filter: blur(15px);
+            background: var(--glass-bg);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-primary);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.7s ease;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .section-card {
+            backdrop-filter: blur(15px);
+            background: var(--glass-bg);
+            padding: 30px;
+            border-radius: 25px;
+            margin-bottom: 30px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-primary);
+            transition: all 0.3s ease;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .section-title {
+            color: white;
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 1em;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-primary);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-gradient);
+        }
+
+        .btn-accent {
+            background: var(--accent-gradient);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        }
+
+        .control-panel {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 12px 24px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-gradient);
+            border-color: transparent;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-primary);
+        }
+
+        .homework-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .homework-card {
+            backdrop-filter: blur(15px);
+            background: var(--glass-bg);
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-primary);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            animation: cardSlideIn 0.6s ease-out;
+        }
+
+        @keyframes cardSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .homework-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            transition: height 0.3s ease;
+        }
+
+        .homework-card.medium-priority::before {
+            background: var(--accent-gradient);
+        }
+
+        .homework-card.high-priority::before {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        }
+
+        .homework-card.completed {
+            opacity: 0.7;
+        }
+
+        .homework-card.completed::before {
+            background: linear-gradient(45deg, #a8e6cf, #88d8a3);
+        }
+
+        .homework-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .homework-card:hover::before {
+            height: 8px;
+        }
+
+        .homework-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .homework-title {
+            font-size: 1.4em;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            flex: 1;
+        }
+
+        .priority-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            backdrop-filter: blur(10px);
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .priority-low {
+            background: rgba(168, 230, 207, 0.3);
+            color: #a8e6cf;
+            border: 1px solid rgba(168, 230, 207, 0.5);
+        }
+
+        .priority-medium {
+            background: rgba(255, 159, 67, 0.3);
+            color: #ff9f43;
+            border: 1px solid rgba(255, 159, 67, 0.5);
+        }
+
+        .priority-high {
+            background: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.5);
+        }
+
+        .homework-details {
+            margin-bottom: 20px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+
+        .detail-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .homework-description {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-style: italic;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .homework-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .complete-btn {
+            background: linear-gradient(45deg, #a8e6cf, #88d8a3);
+            color: #2d5a41;
+        }
+
+        .undo-btn {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .delete-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            color: rgba(255, 255, 255, 0.7);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .empty-state h3 {
+            margin-bottom: 15px;
+            font-size: 2em;
+            color: white;
+        }
+
+        .save-indicator {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-primary);
+            animation: saveNotification 3s ease-in-out;
+        }
+
+        @keyframes saveNotification {
+            0%, 100% { opacity: 0; transform: translateX(100px); }
+            15%, 85% { opacity: 1; transform: translateX(0); }
+        }
+
+        .save-indicator.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px;
+            backdrop-filter: blur(15px);
+            background: var(--glass-bg);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .creator-name {
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .channel-name {
+            color: #ff4757;
+            font-weight: 800;
+            font-size: 20px;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #ff4757, #ff3838);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .channel-name:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 20px rgba(255, 71, 87, 0.5);
+        }
+
+        .youtube-logo {
+            width: 28px;
+            height: 28px;
+            fill: #ff4757;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+                border-radius: 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .homework-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .homework-actions {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                min-width: auto;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            border: 2px solid transparent;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-gradient);
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements" id="floatingElements"></div>
+    
+    <div class="save-indicator" id="saveIndicator">✨ Data saved automatically</div>
+    
+    <div class="container">
+        <h1>🚀 Interactive Homework Tracker</h1>
+        
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completedCount">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingCount">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="progressPercent">0%</div>
+                <div class="stat-label">Progress</div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">✨ Add New Assignment</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" placeholder="Mathematics, Science, History...">
+                </div>
+                <div class="form-group">
+                    <label for="title">Assignment Title</label>
+                    <input type="text" id="title" placeholder="Chapter 5 Exercises, Essay on AI...">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="dueDate">Due Date</label>
+                    <input type="date" id="dueDate">
+                </div>
+                <div class="form-group">
+                    <label for="priority">Priority Level</label>
+                    <select id="priority">
+                        <option value="low">🟢 Low Priority</option>
+                        <option value="medium">🟡 Medium Priority</option>
+                        <option value="high">🔴 High Priority</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="description">Description & Notes</label>
+                <textarea id="description" placeholder="Add any notes, requirements, or details about this assignment..."></textarea>
+            </div>
+            <button class="btn" onclick="addHomework()">🎯 Add Assignment</button>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">⚙️ Data Management</h2>
+            <div class="control-panel">
+                <button class="btn btn-secondary" onclick="exportData()">📥 Export Data</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 Import Data</button>
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">🔍 Filter & View</h2>
+            <div class="control-panel">
+                <button class="filter-btn active" onclick="filterHomework('all')">All Tasks</button>
+                <button class="filter-btn" onclick="filterHomework('pending')">📋 Pending</button>
+                <button class="filter-btn" onclick="filterHomework('completed')">✅ Completed</button>
+                <button class="filter-btn" onclick="filterHomework('high')">🔴 High Priority</button>
+            </div>
+        </div>
+
+        <div class="homework-grid" id="homeworkList">
+            <div class="empty-state">
+                <h3>🎯 Ready to get organized?</h3>
+                <p>Add your first assignment above and watch your productivity soar!</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div class="creator-name">🎨 Crafted with passion by: Naresh Singh Chauhan</div>
+            <a href="https://youtube.com/@nothing2game?si=Z5XtUOhHSmsZC5ix" target="_blank" class="channel-name">
+                <svg class="youtube-logo" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+                Nothing2Game Channel
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let homeworkData = [];
+        let currentFilter = 'all';
+        const STORAGE_KEY = 'homeworkTrackerData';
+
+        // Create floating background elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            const elementCount = 15;
+            
+            for (let i = 0; i < elementCount; i++) {
+                const element = document.createElement('div');
+                element.className = 'floating-element';
+                element.style.left = Math.random() * 100 + '%';
+                element.style.animationDelay = Math.random() * 15 + 's';
+                element.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(element);
+            }
+        }
+
+        // Enhanced load data function
+        function loadData() {
+            try {
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                if (savedData) {
+                    homeworkData = JSON.parse(savedData);
+                    console.log(`✨ Loaded ${homeworkData.length} assignments from storage`);
+                }
+            } catch (error) {
+                console.error('❌ Error loading data:', error);
+                homeworkData = [];
+            }
+        }
+
+        // Enhanced save data function
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(homeworkData));
+                showSaveIndicator();
+                console.log(`💾 Saved ${homeworkData.length} assignments to storage`);
+            } catch (error) {
+                console.error('❌ Error saving data:', error);
+                alert('⚠️ Unable to save data. Your browser storage might be full.');
+            }
+        }
+
+        // Enhanced save indicator
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 3000);
+        }
+
+        function addHomework() {
+            const subject = document.getElementById('subject').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const dueDate = document.getElementById('dueDate').value;
+            const priority = document.getElementById('priority').value;
+            const description = document.getElementById('description').value.trim();
+
+            if (!subject || !title || !dueDate) {
+                // Create custom alert with animation
+                showCustomAlert('⚠️ Please fill in Subject, Title, and Due Date!', 'warning');
+                return;
+            }
+
+            const homework = {
+                id: Date.now(),
+                subject,
+                title,
+                dueDate,
+                priority,
+                description,
+                completed: false,
+                addedDate: new Date().toISOString().split('T')[0]
+            };
+
+            homeworkData.unshift(homework); // Add to beginning for better UX
+            
+            // Clear form with smooth animation
+            clearForm();
+            saveData();
+            updateDisplay();
+            showCustomAlert('🎉 Assignment added successfully!', 'success');
+        }
+
+        function clearForm() {
+            const inputs = ['subject', 'title', 'description'];
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                element.style.transform = 'scale(0.95)';
+                element.style.opacity = '0.5';
+                setTimeout(() => {
+                    element.value = '';
+                    element.style.transform = 'scale(1)';
+                    element.style.opacity = '1';
+                }, 200);
+            });
+            
+            document.getElementById('priority').value = 'low';
+            
+            // Reset due date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('dueDate').value = tomorrow.toISOString().split('T')[0];
+        }
+
+        function showCustomAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 100px;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50px);
+                background: ${type === 'success' ? 'linear-gradient(45deg, #a8e6cf, #88d8a3)' : 
+                           type === 'warning' ? 'linear-gradient(45deg, #ff9f43, #feca57)' : 
+                           'var(--primary-gradient)'};
+                color: white;
+                padding: 20px 30px;
+                border-radius: 15px;
+                font-weight: 600;
+                z-index: 10000;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                backdrop-filter: blur(10px);
+                opacity: 0;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            `;
+            alertDiv.textContent = message;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.style.opacity = '1';
+                alertDiv.style.transform = 'translateX(-50%) translateY(0)';
+            }, 100);
+
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                alertDiv.style.transform = 'translateX(-50%) translateY(-50px)';
+                setTimeout(() => document.body.removeChild(alertDiv), 400);
+            }, 3000);
+        }
+
+        function toggleComplete(id) {
+            const homework = homeworkData.find(h => h.id === id);
+            if (homework) {
+                homework.completed = !homework.completed;
+                
+                // Add completion animation
+                const card = document.querySelector(`[data-id="${id}"]`);
+                if (card) {
+                    card.style.transform = 'scale(0.95) rotate(2deg)';
+                    setTimeout(() => {
+                        card.style.transform = '';
+                        saveData();
+                        updateDisplay();
+                    }, 300);
+                } else {
+                    saveData();
+                    updateDisplay();
+                }
+                
+                const message = homework.completed ? 
+                    '✅ Assignment marked as completed!' : 
+                    '📋 Assignment marked as pending!';
+                showCustomAlert(message, homework.completed ? 'success' : 'info');
+            }
+        }
+
+        function deleteHomework(id) {
+            const homework = homeworkData.find(h => h.id === id);
+            if (homework && confirm(`🗑️ Delete "${homework.title}"?\n\nThis action cannot be undone!`)) {
+                // Add delete animation
+                const card = document.querySelector(`[data-id="${id}"]`);
+                if (card) {
+                    card.style.transform = 'scale(0) rotate(180deg)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        homeworkData = homeworkData.filter(h => h.id !== id);
+                        saveData();
+                        updateDisplay();
+                        showCustomAlert('🗑️ Assignment deleted successfully!', 'warning');
+                    }, 400);
+                } else {
+                    homeworkData = homeworkData.filter(h => h.id !== id);
+                    saveData();
+                    updateDisplay();
+                    showCustomAlert('🗑️ Assignment deleted successfully!', 'warning');
+                }
+            }
+        }
+
+        function exportData() {
+            try {
+                const dataStr = JSON.stringify(homeworkData, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `homework_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showCustomAlert('📥 Data exported successfully!', 'success');
+            } catch (error) {
+                console.error('❌ Export error:', error);
+                showCustomAlert('❌ Export failed. Please try again.', 'warning');
+            }
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        if (confirm(`📤 Import ${importedData.length} assignments?\n\nThis will replace your current ${homeworkData.length} assignments.`)) {
+                            homeworkData = importedData;
+                            saveData();
+                            updateDisplay();
+                            showCustomAlert('📤 Data imported successfully!', 'success');
+                        }
+                    } else {
+                        showCustomAlert('❌ Invalid file format!', 'warning');
+                    }
+                } catch (error) {
+                    console.error('❌ Import error:', error);
+                    showCustomAlert('❌ Invalid file. Please check the format.', 'warning');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function clearAllData() {
+            const count = homeworkData.length;
+            if (count === 0) {
+                showCustomAlert('📭 No data to clear!', 'info');
+                return;
+            }
+            
+            if (confirm(`🗑️ Delete ALL ${count} assignments?\n\nThis will permanently delete everything!`)) {
+                if (confirm('⚠️ FINAL WARNING!\n\nThis action cannot be undone. Continue?')) {
+                    homeworkData = [];
+                    saveData();
+                    updateDisplay();
+                    showCustomAlert('🧹 All data cleared successfully!', 'warning');
+                }
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            const diffTime = date - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                return `⚠️ Overdue by ${Math.abs(diffDays)} day(s)`;
+            } else if (diffDays === 0) {
+                return '🚨 Due today!';
+            } else if (diffDays === 1) {
+                return '⏰ Due tomorrow';
+            } else {
+                return `📅 Due in ${diffDays} day(s)`;
+            }
+        }
+
+        function filterHomework(filter) {
+            currentFilter = filter;
+            
+            // Animate filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => btn.style.transform = '', 150);
+            });
+            
+            event.target.classList.add('active');
+            event.target.style.transform = 'scale(1.05)';
+            setTimeout(() => event.target.style.transform = '', 300);
+            
+            updateDisplay();
+        }
+
+        function getFilteredHomework() {
+            switch (currentFilter) {
+                case 'pending':
+                    return homeworkData.filter(h => !h.completed);
+                case 'completed':
+                    return homeworkData.filter(h => h.completed);
+                case 'high':
+                    return homeworkData.filter(h => h.priority === 'high');
+                default:
+                    return homeworkData;
+            }
+        }
+
+        function updateStats() {
+            const total = homeworkData.length;
+            const completed = homeworkData.filter(h => h.completed).length;
+            const pending = total - completed;
+            const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            // Animate stat updates
+            animateStatUpdate('totalCount', total);
+            animateStatUpdate('completedCount', completed);
+            animateStatUpdate('pendingCount', pending);
+            animateStatUpdate('progressPercent', progress + '%');
+        }
+
+        function animateStatUpdate(elementId, newValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = element.textContent;
+            
+            if (currentValue !== newValue.toString()) {
+                element.style.transform = 'scale(1.2)';
+                element.style.color = '#4facfe';
+                
+                setTimeout(() => {
+                    element.textContent = newValue;
+                    element.style.transform = '';
+                    element.style.color = '';
+                }, 200);
+            }
+        }
+
+        function updateDisplay() {
+            const filteredHomework = getFilteredHomework();
+            const container = document.getElementById('homeworkList');
+
+            updateStats();
+
+            if (filteredHomework.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>🎯 ${currentFilter === 'all' ? 'Ready to get organized?' : `No ${currentFilter} assignments found!`}</h3>
+                        <p>${currentFilter === 'all' ? 'Add your first assignment above and watch your productivity soar!' : 'Try a different filter or add new assignments.'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort homework intelligently
+            filteredHomework.sort((a, b) => {
+                if (a.completed !== b.completed) return a.completed - b.completed;
+                
+                const priorityOrder = { high: 3, medium: 2, low: 1 };
+                if (priorityOrder[a.priority] !== priorityOrder[b.priority]) 
+                    return priorityOrder[b.priority] - priorityOrder[a.priority];
+                
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            });
+
+            container.innerHTML = filteredHomework.map((homework, index) => `
+                <div class="homework-card ${homework.priority}-priority ${homework.completed ? 'completed' : ''}" 
+                     data-id="${homework.id}"
+                     style="animation-delay: ${index * 0.1}s">
+                    <div class="homework-header">
+                        <div class="homework-title">${homework.title}</div>
+                        <div class="priority-badge priority-${homework.priority}">
+                            ${homework.priority === 'high' ? '🔴' : homework.priority === 'medium' ? '🟡' : '🟢'} 
+                            ${homework.priority}
+                        </div>
+                    </div>
+                    <div class="homework-details">
+                        <div class="detail-item">
+                            <div class="detail-icon">📖</div>
+                            <span><strong>Subject:</strong> ${homework.subject}</span>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">📅</div>
+                            <span><strong>Due:</strong> ${formatDate(homework.dueDate)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">📌</div>
+                            <span><strong>Added:</strong> ${homework.addedDate}</span>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">${homework.completed ? '✅' : '⏳'}</div>
+                            <span><strong>Status:</strong> ${homework.completed ? 'Completed' : 'Pending'}</span>
+                        </div>
+                    </div>
+                    ${homework.description ? `<div class="homework-description">"${homework.description}"</div>` : ''}
+                    <div class="homework-actions">
+                        <button class="action-btn ${homework.completed ? 'undo-btn' : 'complete-btn'}" 
+                                onclick="toggleComplete(${homework.id})">
+                            ${homework.completed ? '↩️ Mark Pending' : '✅ Complete'}
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteHomework(${homework.id})">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add stagger animation to cards
+            const cards = container.querySelectorAll('.homework-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }
+
+        // Initialize the app with enhanced animations
+        function initializeApp() {
+            console.log('🚀 Initializing Interactive Homework Tracker...');
+            
+            // Create floating elements
+            createFloatingElements();
+            
+            // Load data
+            loadData();
+            
+            // Set default due date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('dueDate').value = tomorrow.toISOString().split('T')[0];
+
+            // Initial display update
+            updateDisplay();
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 's':
+                            e.preventDefault();
+                            exportData();
+                            break;
+                        case 'Enter':
+                            if (e.target.tagName !== 'TEXTAREA') {
+                                e.preventDefault();
+                                addHomework();
+                            }
+                            break;
+                    }
+                }
+            });
+            
+            // Add smooth scrolling for better UX
+            document.documentElement.style.scrollBehavior = 'smooth';
+            
+            console.log('✨ App initialized successfully!');
+        }
+
+        // Enhanced page visibility handling
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                // Refresh display when user returns to tab
+                updateDisplay();
+            }
+        });
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
+</body>
+</html>
